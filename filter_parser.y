@@ -83,7 +83,7 @@ var timezone = func() *time.Location {
 %type<expr> s_time
 %token<token> STRING NUMBER
 %token<token> MONTH_IDENT TWELVE_CLOCK_IDENT
-%token<token> TODAY_IDENT TOMORROW_IDENT YESTERDAY_IDENT
+%token<token> TODAY_IDENT TOMORROW_IDENT YESTERDAY_IDENT DAYS_IDENT
 %token<token> DUE BEFORE AFTER OVER OVERDUE NO DATE LABELS '#' '@'
 %left '&' '|'
 
@@ -156,6 +156,10 @@ expr
         e := $4.(DateExpr)
         e.operation = DUE_AFTER
         $$ = e
+    }
+    | NUMBER DAYS_IDENT
+    {
+        $$ = DateExpr{allDay: true, datetime: today().AddDate(0, 0, atoi($1.literal)), operation: DUE_BEFORE}
     }
     | s_datetime
 
@@ -375,6 +379,8 @@ func (l *Lexer) Lex(lval *yySymType) int {
                 token = DATE
             } else if lowerToken == "labels" {
                 token = LABELS
+            } else if lowerToken == "day" || lowerToken == "days" {
+                token = DAYS_IDENT
             } else {
                 token = STRING
             }
